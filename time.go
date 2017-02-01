@@ -4,6 +4,8 @@ import (
     "sort"
     "time"
     "errors"
+
+    "github.com/dsoprea/go-logging"
 )
 
 var (
@@ -82,7 +84,7 @@ func AbsoluteDistance(a, b time.Time) time.Duration {
 func (ts TimeSlice) SearchNearest(t time.Time, tolerance time.Duration, cb func(t time.Time) error) (err error) {
     defer func() {
         if state := recover(); state != nil {
-            err = state.(error)
+            err = log.Wrap(state.(error))
         }
     }()
 
@@ -91,6 +93,10 @@ func (ts TimeSlice) SearchNearest(t time.Time, tolerance time.Duration, cb func(
     }
 
     i := ts.Search(t)
+
+    if i >= len(ts) {
+        i--
+    }
 
     // `i` is currently equal-to-or-just-greater to the time we searched for. 
     // Step the left to the earliest time that falls within tolerance of the 
@@ -105,6 +111,7 @@ func (ts TimeSlice) SearchNearest(t time.Time, tolerance time.Duration, cb func(
             didMove = true
         }
 
+        // We're out of tolerance.
         if AbsoluteDistance(t, ts[i]) > tolerance {
             if didMove {
                 // We found at least one match but then moved out of tolerance 
