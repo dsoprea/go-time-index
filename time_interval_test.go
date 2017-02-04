@@ -19,11 +19,8 @@ func TestTimeIntervalAddDuplicate(t *testing.T) {
 
     tis := make(TimeIntervalSlice, 0)
     
-    tis, err = tis.Add(ti1)
-    log.PanicIf(err)
-
-    tis, err = tis.Add(ti1)
-    log.PanicIf(err)
+    tis = tis.Add(ti1)
+    tis = tis.Add(ti1)
 
     if len(tis) != 1 {
         t.Fatalf("Duplicate added.")
@@ -38,11 +35,8 @@ func checkTestAddOrder(description string, t *testing.T, unsortedIntervals []Tim
     }
 
     tis := make(TimeIntervalSlice, 0)
-
-    var err error
     for _, ti := range unsortedIntervals {
-        tis, err = tis.Add(ti)
-        log.PanicIf(err)
+        tis = tis.Add(ti)
     }
 
     len1 := len(tis)
@@ -218,14 +212,9 @@ func TestTimeIntervalSearchSimple(t *testing.T) {
 
     tis := make(TimeIntervalSlice, 0)
     
-    tis, err = tis.Add(ti1)
-    log.PanicIf(err)
-
-    tis, err = tis.Add(ti2)
-    log.PanicIf(err)
-
-    tis, err = tis.Add(ti3)
-    log.PanicIf(err)
+    tis = tis.Add(ti1)
+    tis = tis.Add(ti2)
+    tis = tis.Add(ti3)
 
     i := tis.search(ti1)
     if i != 0 {
@@ -245,14 +234,11 @@ func TestTimeIntervalSearchSimple(t *testing.T) {
 
 func searchTestIntervals(description string, t *testing.T, intervals []TimeInterval, q time.Time, expectedMatches []TimeInterval) {
     tis := make(TimeIntervalSlice, 0)
-
-    var err error
     for _, ti := range intervals {
-        tis, err = tis.Add(ti)
-        log.PanicIf(err)
+        tis = tis.Add(ti)
     }
 
-    matches := tis.Search(q)
+    matches := tis.SearchAndReturn(q)
 
     len1 := len(matches)
     len2 := len(expectedMatches)

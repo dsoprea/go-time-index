@@ -4,6 +4,8 @@ import (
     "time"
     "sort"
     "fmt"
+
+    "github.com/dsoprea/go-logging"
 )
 
 type TimeInterval [2]time.Time
@@ -34,13 +36,32 @@ func (tis TimeIntervalSlice) search(ti TimeInterval) int {
     return SearchTimeIntervals(tis, ti)
 }
 
-// Search Return all intervals that contain the given time.
-func (tis TimeIntervalSlice) Search(t time.Time) (matches []TimeInterval) {
+func (tis TimeIntervalSlice) SearchAndReturn(t time.Time) (matches []TimeInterval) {
     matches = make([]TimeInterval, 0)
+
+    cb := func(ti TimeInterval) (err error) {
+        matches = append([]TimeInterval { ti }, matches...)
+        return nil
+    }
+
+    if err := tis.Search(t, cb); err != nil {
+        log.Panic(err)
+    }
+
+    return matches
+}
+
+// Search Call the callback with all intervals that contain the given time.
+func (tis TimeIntervalSlice) Search(t time.Time, cb func(ti TimeInterval) error) (err error) {
+    defer func() {
+        if state := recover(); state != nil {
+            err = log.Wrap(state.(error))
+        }
+    }()
 
     len_ := len(tis)
     if len_ == 0 {
-        return matches
+        return nil
     }
 
     // If there is more than one match, this will point to the first.
@@ -80,10 +101,12 @@ func (tis TimeIntervalSlice) Search(t time.Time) (matches []TimeInterval) {
 
         // We're working our way to the front of the sorted list, so prepend 
         // the results (so that we maintain order).
-        matches = append([]TimeInterval { tis[i] }, matches...)
+        if err := cb(tis[i]); err != nil {
+            log.Panic(err)
+        }
     }
-    
-    return matches
+
+    return nil
 }
 
 func (tis TimeIntervalSlice) getInsertLocation(ti TimeInterval) (i int) {
@@ -155,24 +178,22 @@ func (tis TimeIntervalSlice) getInsertLocation(ti TimeInterval) (i int) {
     return 0
 }
 
-func (tis TimeIntervalSlice) Add(ti TimeInterval) (newTis TimeIntervalSlice, err error) {
+func (tis TimeIntervalSlice) Add(ti TimeInterval) (newTis TimeIntervalSlice) {
     if ti[0].Before(ti[1]) == false {
-        err = fmt.Errorf("interval is invalid")
-
-        return nil, err
+        log.Panic(fmt.Errorf("interval is invalid"))
     }
 
     i := tis.getInsertLocation(ti)
 
     // Already exists.
     if i == -1 {
-        return tis, nil
+        return tis
     }
 
     right := append(TimeIntervalSlice { ti }, tis[i:]...)
     newTis = append(tis[:i], right...)
 
-    return newTis, nil
+    return newTis
 }
 
 func SearchTimeIntervals(tis TimeIntervalSlice, ti TimeInterval) int {
