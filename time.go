@@ -17,6 +17,10 @@ type TimeEntry struct {
 	Items []interface{}
 }
 
+func (te TimeEntry) IsZero() bool {
+	return te.Time.IsZero()
+}
+
 type TimeSlice []TimeEntry
 
 func (ts TimeSlice) Len() int {
