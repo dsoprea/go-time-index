@@ -51,7 +51,7 @@ func (ts TimeSlice) Add(t time.Time, data interface{}) (newTs TimeSlice) {
 			ts[i].Items = append(ts[i].Items, data)
 		}
 
-		return
+		return ts
 	}
 
 	items := []interface{}{}
